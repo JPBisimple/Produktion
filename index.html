@@ -491,20 +491,11 @@
 
 <script>
     // ─── CONFIG ────────────────────────────────────────────────────────────────
-    var SHAREPOINT_SITE = 'https://himmerlandskoed.sharepoint.com/sites/Produktion';
-    var LIST_NAME       = 'ProduktionsData';
-    var ITEM_TITLE      = 'Current';
-    var REFRESH_SEC     = 60;
+    var API_URL = 'https://defaultfa06760d28fa42b38931aecf8380fa.da.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/6db8717a72974356a4f30317b8edb407/triggers/manual/paths/invoke?api-version=1';
+    var REFRESH_SEC = 60;
     // ──────────────────────────────────────────────────────────────────────────
 
-    var API_URL = SHAREPOINT_SITE
-        + "/_api/web/lists/getbytitle('"
-        + encodeURIComponent(LIST_NAME)
-        + "')/items?$filter=Title eq '"
-        + ITEM_TITLE
-        + "'&$top=1&$select=Title,RegDate,RegTime,TotalColli,TotalWeight,"
-        + "KPIColli,KPIWeight,Location,TotalSlaughtered,SlaughteredSTYD,"
-        + "ColliYD,WeightYD,HideHolesCount,MultipleShots";
+
 
     function fmt(val, decimals) {
         if (val === null || val === undefined) return '—';
@@ -578,39 +569,34 @@
     }
 
     function fetchData() {
-        // Forsøg 1: Med credentials (virker hvis siden åbnes fra SharePoint domæne)
         fetch(API_URL, {
+            method: 'POST',
             headers: {
-                'Accept': 'application/json;odata=nometadata',
                 'Content-Type': 'application/json'
             },
-            credentials: 'include'
+            body: JSON.stringify({})
         })
         .then(function(res) {
-            if (res.status === 401) throw new Error('401 - Ikke logget ind på SharePoint');
-            if (res.status === 403) throw new Error('403 - Ingen adgang til listen');
-            if (res.status === 404) throw new Error('404 - Listen "ProduktionsData" blev ikke fundet');
+            if (res.status === 401) throw new Error('401 - Ikke autoriseret');
+            if (res.status === 403) throw new Error('403 - Ingen adgang');
+            if (res.status === 404) throw new Error('404 - Flow ikke fundet');
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
         })
         .then(function(data) {
-            var items = data.value || [];
-            if (items.length > 0) {
-                populateDashboard(items[0]);
+            if (data && data.TotalSlaughtered !== undefined) {
+                populateDashboard(data);
             } else {
                 setVal('val-status', 'Ingen data');
                 document.getElementById('lastUpdatedDisplay').textContent =
-                    'Intet "Current" item fundet — tjek Title-kolonnen i listen';
+                    'Flow returnerede ingen data — tjek Response body i Power Automate';
             }
         })
         .catch(function(err) {
             var msg = err.message || 'Ukendt fejl';
-
-            // CORS fejl ser sådan ud
             if (msg === 'Failed to fetch' || msg.indexOf('NetworkError') > -1) {
-                msg = 'CORS blokeret — åbn siden fra SharePoint i stedet';
+                msg = 'Kunne ikke forbinde til Power Automate';
             }
-
             showError(msg);
         });
     }
