@@ -11,9 +11,9 @@
             --surface: #1c3530;
             --surface2: #163028;
             --border: #2d5248;
-            --accent: #00c9a0;
-            --accent2: #ff6b35;
-            --accent3: #4a9eff;
+            --accent: #f8d892;
+            --accent2: #f8d892;
+            --accent3: #f8d892;
             --text: #867551;
             --text-muted: #5a4f38;
             --text-dim: #6e5e42;
@@ -34,7 +34,7 @@
             position: fixed;
             top: -200px; left: -200px;
             width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(0,201,160,0.04) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(248,216,146,0.04) 0%, transparent 70%);
             pointer-events: none; z-index: 0;
         }
 
@@ -90,8 +90,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0,201,160,0.1);
-            border: 1px solid rgba(0,201,160,0.2);
+            background: rgba(248,216,146,0.1);
+            border: 1px solid rgba(248,216,146,0.2);
             border-radius: 100px;
             padding: 6px 16px;
             font-size: 0.75rem;
@@ -372,7 +372,7 @@
             <div class="gauge-wrapper">
                 <svg class="gauge-svg" viewBox="0 0 200 80">
                     <path d="M 20 70 A 80 80 0 0 1 180 70" fill="none" stroke="#252a3a" stroke-width="10" stroke-linecap="round"/>
-                    <path d="M 20 70 A 80 80 0 0 1 180 70" fill="none" stroke="#00c9a0" stroke-width="10" stroke-linecap="round"
+                    <path d="M 20 70 A 80 80 0 0 1 180 70" fill="none" stroke="#f8d892" stroke-width="10" stroke-linecap="round"
                           stroke-dasharray="251" stroke-dashoffset="251" id="gauge-fill"
                           style="transition: stroke-dashoffset 1.2s ease;"/>
                     <text x="20" y="78" fill="#5a6080" font-size="9" font-family="DM Sans">0</text>
