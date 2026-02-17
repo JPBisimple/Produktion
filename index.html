@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produktion Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0f14;
+            --surface: #141720;
+            --surface2: #1c2030;
+            --border: #252a3a;
+            --accent: #00c9a0;
+            --accent2: #ff6b35;
+            --accent3: #4a9eff;
+            --text: #e8eaf2;
+            --text-muted: #5a6080;
+            --text-dim: #8890b0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px; left: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(0,201,160,0.04) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(74,158,255,0.04) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .wrapper {
+            position: relative; z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 0.08em;
+            line-height: 1;
+        }
+
+        .header-left .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,201,160,0.1);
+            border: 1px solid rgba(0,201,160,0.2);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+        }
+
+        .status-pill.error {
+            background: rgba(255,107,53,0.1);
+            border-color: rgba(255,107,53,0.2);
+            color: var(--accent2);
+        }
+
+        .status-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .last-updated {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: 'DM Mono', monospace;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .primary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .kpi-card:hover { border-color: rgba(255,255,255,0.15); }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--card-accent, var(--accent));
+            opacity: 0.8;
+        }
+
+        .kpi-card.green  { --card-accent: var(--accent); }
+        .kpi-card.orange { --card-accent: var(--accent2); }
+        .kpi-card.blue   { --card-accent: var(--accent3); }
+
+        .card-label {
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-sublabel {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+        }
+
+        .card-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4.5rem;
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
+
+        .card-value.green  { color: var(--accent); }
+        .card-value.orange { color: var(--accent2); }
+        .card-value.blue   { color: var(--accent3); }
+
+        .card-unit {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .gauge-wrapper { margin-top: 16px; }
+        .gauge-svg { width: 100%; height: 80px; }
+
+        .secondary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-card .card-label { margin-bottom: 12px; }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.4rem;
+            line-height: 1;
+        }
+
+        .stat-unit {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .info-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .info-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-left {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-bar {
+            width: 120px; height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .refresh-progress {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        .countdown {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent);
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.7; }
+        }
+
+        .loading-val {
+            animation: shimmer 1.2s ease-in-out infinite;
+            color: var(--text-muted) !important;
+        }
+
+        @media (max-width: 1100px) {
+            .secondary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .primary-grid   { grid-template-columns: 1fr; }
+            .secondary-grid { grid-template-columns: repeat(2, 1fr); }
+            .info-grid      { grid-template-columns: 1fr; }
+            .header-left h1 { font-size: 2rem; }
+            .card-value     { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <header>
+        <div class="header-left">
+            <h1>Produktion</h1>
+            <div class="subtitle">Live Dashboard · Himmerlandskød</div>
+        </div>
+        <div class="header-right">
+            <div class="status-pill" id="statusPill">
+                <div class="status-dot"></div>
+                <span id="statusText">LIVE DATA</span>
+            </div>
+            <div class="last-updated" id="lastUpdatedDisplay">Henter data...</div>
+        </div>
+    </header>
+
+    <!-- Primary KPIs -->
+    <div class="section-label">Slagtede dyr</div>
+    <div class="primary-grid">
+
+        <div class="kpi-card green">
+            <div class="card-label">Total Slagtet</div>
+            <div class="card-sublabel">Sammenlignet med i går</div>
+            <div class="card-value green loading-val" id="val-TotalSlaughtered">—</div>
+            <div class="card-unit">stk i dag</div>
+            <div class="gauge-wrapper">
+                <svg class="gauge-svg" viewBox="0 0 200 80">
+                    <path d="M 20 70 A 80 80 0 0 1 180 70" fill="none" stroke="#252a3a" stroke-width="10" stroke-linecap="round"/>
+                    <path d="M 20 70 A 80 80 0 0 1 180 70" fill="none" stroke="#00c9a0" stroke-width="10" stroke-linecap="round"
+                          stroke-dasharray="251" stroke-dashoffset="251" id="gauge-fill"
+                          style="transition: stroke-dashoffset 1.2s ease;"/>
+                    <text x="20" y="78" fill="#5a6080" font-size="9" font-family="DM Sans">0</text>
+                    <text x="180" y="78" text-anchor="end" fill="#5a6080" font-size="9" font-family="DM Sans" id="gauge-max">—</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="kpi-card blue">
+            <div class="card-label">Slagtet i går</div>
+            <div class="card-sublabel">Same time yesterday</div>
+            <div class="card-value blue loading-val" id="val-SlaughteredSTYD">—</div>
+            <div class="card-unit">stk samme tid i går</div>
+        </div>
+
+        <div class="kpi-card orange">
+            <div class="card-label">Huller i skind</div>
+            <div class="card-sublabel">Hide holes count</div>
+            <div class="card-value orange loading-val" id="val-HideHolesCount">—</div>
+            <div class="card-unit">registrerede huller</div>
+        </div>
+
+    </div>
+
+    <!-- Colli & Weight -->
+    <div class="section-label">Colli & Vægt</div>
+    <div class="secondary-grid">
+        <div class="stat-card">
+            <div class="card-label">Total Colli</div>
+            <div class="stat-value loading-val" id="val-TotalColli">—</div>
+            <div class="stat-unit">stk</div>
+        </div>
+        <div class="stat-card">
+            <div class="card-label">Total Vægt</div>
+            <div class="stat-value loading-val" id="val-TotalWeight">—</div>
+            <div class="stat-unit">kg</div>
+        </div>
+        <div class="stat-card">
+            <div class="card-label">Colli i går</div>
+            <div class="stat-value loading-val" id="val-ColliYD">—</div>
+            <div class="stat-unit">stk</div>
+        </div>
+        <div class="stat-card">
+            <div class="card-label">Vægt i går</div>
+            <div class="stat-value loading-val" id="val-WeightYD">—</div>
+            <div class="stat-unit">kg</div>
+        </div>
+    </div>
+
+    <!-- KPI & Kvalitet -->
+    <div class="section-label">KPI & Kvalitet</div>
+    <div class="secondary-grid" style="margin-bottom:16px;">
+        <div class="stat-card">
+            <div class="card-label">KPI Colli</div>
+            <div class="stat-value loading-val" id="val-KPIColli">—</div>
+            <div class="stat-unit">mål</div>
+        </div>
+        <div class="stat-card">
+            <div class="card-label">KPI Vægt</div>
+            <div class="stat-value loading-val" id="val-KPIWeight">—</div>
+            <div class="stat-unit">kg mål</div>
+        </div>
+        <div class="stat-card">
+            <div class="card-label">Multiple Shots</div>
+            <div class="stat-value loading-val" id="val-MultipleShots">—</div>
+            <div class="stat-unit">registreringer</div>
+        </div>
+        <div class="stat-card" style="background:var(--surface2);">
+            <div class="card-label">Dataforbindelse</div>
+            <div class="stat-value" style="font-size:1.1rem;font-family:'DM Sans';color:var(--accent);" id="val-status">Henter...</div>
+            <div class="stat-unit">SharePoint List</div>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="section-label">Info</div>
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-icon">📍</div>
+            <div>
+                <div class="info-label">Lokation</div>
+                <div class="info-value loading-val" id="val-Location">—</div>
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">🕐</div>
+            <div>
+                <div class="info-label">Registreringstid</div>
+                <div class="info-value loading-val" id="val-RegTime">—</div>
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">📅</div>
+            <div>
+                <div class="info-label">Dato</div>
+                <div class="info-value loading-val" id="val-RegDate">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-left">
+            <span>Opdaterer om</span>
+            <div class="refresh-bar">
+                <div class="refresh-progress" id="refreshProgress"></div>
+            </div>
+            <span class="countdown" id="countdown">60s</span>
+        </div>
+        <div style="font-size:0.7rem;color:var(--text-muted);">
+            SharePoint List · Auto-refresh 60s
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ─── CONFIG ────────────────────────────────────────────────────────────────
+    var SHAREPOINT_SITE = 'https://himmerlandskoed.sharepoint.com/sites/Produktion';
+    var LIST_NAME       = 'ProduktionsData';
+    var ITEM_TITLE      = 'Current';
+    var REFRESH_SEC     = 60;
+    // ──────────────────────────────────────────────────────────────────────────
+
+    var API_URL = SHAREPOINT_SITE
+        + "/_api/web/lists/getbytitle('"
+        + encodeURIComponent(LIST_NAME)
+        + "')/items?$filter=Title eq '"
+        + ITEM_TITLE
+        + "'&$top=1&$select=Title,RegDate,RegTime,TotalColli,TotalWeight,"
+        + "KPIColli,KPIWeight,Location,TotalSlaughtered,SlaughteredSTYD,"
+        + "ColliYD,WeightYD,HideHolesCount,MultipleShots";
+
+    function fmt(val, decimals) {
+        if (val === null || val === undefined) return '—';
+        var n = parseFloat(val);
+        if (isNaN(n)) return String(val);
+        if (decimals !== undefined) return n.toFixed(decimals);
+        return Math.round(n).toLocaleString('da-DK');
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '—';
+        try {
+            var d = new Date(iso);
+            return d.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch(e) { return iso; }
+    }
+
+    function setVal(id, value) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = value;
+        el.classList.remove('loading-val');
+    }
+
+    function updateGauge(value, compareValue) {
+        var max = Math.max(value, compareValue || 0) * 1.3;
+        max = Math.ceil(max / 100) * 100 || 1200;
+        var offset = 251 - Math.min(value / max, 1) * 251;
+        document.getElementById('gauge-fill').setAttribute('stroke-dashoffset', offset);
+        document.getElementById('gauge-max').textContent =
+            max >= 1000 ? (max / 1000).toFixed(1) + 'k' : max;
+    }
+
+    function populateDashboard(item) {
+        setVal('val-TotalSlaughtered', fmt(item.TotalSlaughtered));
+        setVal('val-SlaughteredSTYD',  fmt(item.SlaughteredSTYD));
+        setVal('val-HideHolesCount',   fmt(item.HideHolesCount));
+        setVal('val-TotalColli',       fmt(item.TotalColli));
+        setVal('val-TotalWeight',      fmt(item.TotalWeight, 1));
+        setVal('val-ColliYD',          fmt(item.ColliYD));
+        setVal('val-WeightYD',         fmt(item.WeightYD, 1));
+        setVal('val-KPIColli',         fmt(item.KPIColli));
+        setVal('val-KPIWeight',        fmt(item.KPIWeight, 1));
+        setVal('val-MultipleShots',    fmt(item.MultipleShots));
+        setVal('val-Location',         item.Location || '—');
+        setVal('val-RegTime',          item.RegTime   || '—');
+        setVal('val-RegDate',          formatDate(item.RegDate));
+        setVal('val-status',           'Aktiv ✓');
+
+        updateGauge(
+            parseFloat(item.TotalSlaughtered) || 0,
+            parseFloat(item.SlaughteredSTYD)  || 0
+        );
+
+        document.getElementById('lastUpdatedDisplay').textContent =
+            'Opdateret ' + new Date().toLocaleTimeString('da-DK');
+
+        var pill = document.getElementById('statusPill');
+        pill.classList.remove('error');
+        document.getElementById('statusText').textContent = 'LIVE DATA';
+    }
+
+    function showError(msg) {
+        var pill = document.getElementById('statusPill');
+        pill.classList.add('error');
+        document.getElementById('statusText').textContent = 'FEJL';
+        document.getElementById('lastUpdatedDisplay').textContent =
+            msg + ' · ' + new Date().toLocaleTimeString('da-DK');
+        setVal('val-status', 'Fejl ⚠️');
+        console.error('Dashboard fejl:', msg);
+    }
+
+    function fetchData() {
+        // Forsøg 1: Med credentials (virker hvis siden åbnes fra SharePoint domæne)
+        fetch(API_URL, {
+            headers: {
+                'Accept': 'application/json;odata=nometadata',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(function(res) {
+            if (res.status === 401) throw new Error('401 - Ikke logget ind på SharePoint');
+            if (res.status === 403) throw new Error('403 - Ingen adgang til listen');
+            if (res.status === 404) throw new Error('404 - Listen "ProduktionsData" blev ikke fundet');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
+        .then(function(data) {
+            var items = data.value || [];
+            if (items.length > 0) {
+                populateDashboard(items[0]);
+            } else {
+                setVal('val-status', 'Ingen data');
+                document.getElementById('lastUpdatedDisplay').textContent =
+                    'Intet "Current" item fundet — tjek Title-kolonnen i listen';
+            }
+        })
+        .catch(function(err) {
+            var msg = err.message || 'Ukendt fejl';
+
+            // CORS fejl ser sådan ud
+            if (msg === 'Failed to fetch' || msg.indexOf('NetworkError') > -1) {
+                msg = 'CORS blokeret — åbn siden fra SharePoint i stedet';
+            }
+
+            showError(msg);
+        });
+    }
+
+    // Countdown + auto-refresh
+    var secondsLeft = REFRESH_SEC;
+    var progressEl  = document.getElementById('refreshProgress');
+
+    setInterval(function() {
+        secondsLeft--;
+        document.getElementById('countdown').textContent = secondsLeft + 's';
+        progressEl.style.width = ((REFRESH_SEC - secondsLeft) / REFRESH_SEC * 100) + '%';
+
+        if (secondsLeft <= 0) {
+            secondsLeft = REFRESH_SEC;
+            progressEl.style.transition = 'none';
+            progressEl.style.width = '0%';
+            setTimeout(function() { progressEl.style.transition = 'width 1s linear'; }, 50);
+            fetchData();
+        }
+    }, 1000);
+
+    fetchData();
+</script>
+</body>
+</html>
